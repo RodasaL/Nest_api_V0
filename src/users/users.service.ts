@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { updateUserDto } from './dto/update-user.dto';
+import { error } from 'console';
 
 @Injectable()
 export class UsersService {
@@ -12,23 +13,39 @@ private users = [
 ];
 
 getUsers(){ //sem filtro devolve os users todos
+    let UReturn:{[key:string] : any}[] = [];
+    UReturn = this.users;
+    if(UReturn.length > 0){
     return this.users;
+    }else{
+        throw new Error('Nao existem users')
+    }  
 };
 
 getUsersFuncs(type?: 'Func' | 'Admin'){ //filtro apenas para tipo Func/Admin
+    let UReturn: { id: string; name: string; type: string; }[] = [];
+
+    
 if (type){
-return this.users.filter((user)=>user.type === type);
+ UReturn = this.users.filter((user)=>user.type == type);
+ 
 }
-return this.users;
+if(UReturn.length > 0){
+return UReturn;
+}else{
+    throw new Error('User not found with the filter')
+}
 };
 
 getUsersbyId(id){ //filtro por ID
-    if(id){
-        return this.users.filter((user)=>user.id == id);
+   
+    const UReturn = this.users.find((user)=>user.id == id);
+    if(!UReturn){
+        throw new Error('User not found');
     }
-    return this.users;
-
-};
+    
+    return UReturn;
+}
 
 updateUser(id: string, updateUserDto: updateUserDto){
     this.users = this.users.map((user) =>{
@@ -47,8 +64,13 @@ return newUser;
 }
 
 deleteByID(id: string){
-    let id_=Number(id);
-    this.users.splice(id_,0);
+    const index = this.users.findIndex(user => user.id === id);
+    /*
+    if (index === -1) {
+        throw new Error('User not found');
+    }
+    */
+    this.users.splice(index, 1); // Remove 1 elemento no índice encontrado
     return this.users;
 }
 }
