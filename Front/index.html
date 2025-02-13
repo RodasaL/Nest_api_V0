@@ -97,27 +97,52 @@
         }
 
         function formatResult(data) {
-            const resultElement = document.getElementById('result');
-            if (!data.labels || data.labels.length === 0) {
-                resultElement.innerHTML = "<p>Nenhum rótulo encontrado.</p>";
-                return;
-            }
+    const resultElement = document.getElementById('result');
+    let html = "";
 
-            let html = "<h3>Labels Detectados:</h3>";
-            html += '<div style="max-height: 300px; overflow-y: auto;">';
+    // Labels
+    if (data.labels && data.labels.length > 0) {
+        html += "<h3>Labels Detectados:</h3>";
+        html += '<div style="max-height: 300px; overflow-y: auto;">';
+        data.labels.forEach(label => {
+            html += `
+                <div class="label-item">
+                    <p><strong>Descrição:</strong> ${label.description}</p>
+                    <p class="label-score">Confiança: ${(label.score * 100).toFixed(2)}%</p>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
 
-            data.labels.forEach(label => {
-                html += `
-                    <div class="label-item">
-                        <p><strong>Descrição:</strong> ${label.description}</p>
-                        <p class="label-score">Confiança: ${(label.score * 100).toFixed(2)}%</p>
-                    </div>
-                `;
-            });
+    // Logos  <-- Adicione este bloco
+    if (data.logos && data.logos.length > 0) {
+        html += "<h3>Logos Detectados:</h3>";
+        html += '<div style="max-height: 300px; overflow-y: auto;">';
+        data.logos.forEach(logo => {
+            html += `
+                <div class="label-item">
+                    <p><strong>Descrição:</strong> ${logo.description}</p>
+                    <p class="label-score">Confiança: ${(logo.score * 100).toFixed(2)}%</p>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    /*
+    // Texto <-- Adicione este bloco
+    if (data.fullTextAnnotation && data.fullTextAnnotation.text) {
+        html += "<h3>Texto Detectado:</h3>";
+        html += `<p>${data.fullTextAnnotation.text}</p>`;
+    }
 
-            html += '</div>';
-            resultElement.innerHTML = html;
-        }
+    if (!data.labels || data.labels.length === 0 && !data.logos || data.logos.length === 0 && !data.fullTextAnnotation || !data.fullTextAnnotation.text) {
+        html = "<p>Nenhum resultado encontrado.</p>";
+    }
+        */
+
+    resultElement.innerHTML = html;
+}
     </script>
 </body>
 </html>
