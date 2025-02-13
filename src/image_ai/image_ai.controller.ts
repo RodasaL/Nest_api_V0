@@ -8,10 +8,11 @@ export class ImageAiController {
   constructor(private readonly imageService: ImageAiService) {}
 
  
-  @Post('generate')
-  async generateImage(@Body() body: { prompt: string }) {
-    const { prompt } = body;
-    const imageUrls = await this.imageService.generateImage(prompt);
-    return { imageUrls };
+  @Post('analyze')
+  async analyzeimage(@Body('image') base64Image: string) {
+    if (!base64Image) {
+      return { error: 'Image is required in base64 format' };
+    }
+    return await this.imageService.analyzeImage(base64Image);
   }
 }

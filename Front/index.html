@@ -1,18 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Generator</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Vision API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #result {
+            text-align: left;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .label-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .label-item:last-child {
+            border-bottom: none;
+        }
+        .label-score {
+            font-weight: bold;
+            color: #007BFF;
+        }
+        #image-container { /* Style for the image container */
+          margin-top: 20px;
+        }
+        #uploaded-image { /* Style for the uploaded image */
+          max-width: 100%;
+          height: auto;
+        }
+
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Generate Image from Prompt</h1>
-    <textarea id="prompt" placeholder="Enter a description for the image"></textarea>
-    <button onclick="generateImage()">Generate Image</button>
-    <div id="image-container"></div>
-  </div>
-  <script src="script.js"></script>
+    <h1>Google Vision API - Análise de Imagem</h1>
+
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="uploadImage()">Analisar Imagem</button>
+
+    <div id="image-container">  </div> 
+    <h2>Resultado:</h2>
+    <div id="result">Nenhum resultado ainda.</div>
+
+    <script>
+        async function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const resultElement = document.getElementById('result');
+            const imageContainer = document.getElementById('image-container'); // Get the image container
+
+            if (fileInput.files.length === 0) {
+                alert("Selecione uma imagem primeiro!");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function (event) {
+                const base64Image = event.target.result.split(',')[1];
+                const imageUrl = event.target.result; // Store the data URL
+
+                // Display the uploaded image
+                imageContainer.innerHTML = `<img id="uploaded-image" src="${imageUrl}" alt="Uploaded Image">`;
+
+
+                try {
+                    const response = await fetch('http://localhost:3000/image-ai/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: base64Image })
+                    });
+
+                    const data = await response.json();
+                    formatResult(data);
+                } catch (error) {
+                    resultElement.innerHTML = `<p style="color: red;">Erro ao enviar imagem: ${error}</p>`;
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function formatResult(data) {
+            const resultElement = document.getElementById('result');
+            if (!data.labels || data.labels.length === 0) {
+                resultElement.innerHTML = "<p>Nenhum rótulo encontrado.</p>";
+                return;
+            }
+
+            let html = "<h3>Labels Detectados:</h3>";
+            html += '<div style="max-height: 300px; overflow-y: auto;">';
+
+            data.labels.forEach(label => {
+                html += `
+                    <div class="label-item">
+                        <p><strong>Descrição:</strong> ${label.description}</p>
+                        <p class="label-score">Confiança: ${(label.score * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            resultElement.innerHTML = html;
+        }
+    </script>
 </body>
 </html>
